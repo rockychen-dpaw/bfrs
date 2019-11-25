@@ -1,5 +1,5 @@
 from dbca_utils.utils import env
-import dj_database_url
+from confy import database
 import os
 import sys
 
@@ -36,9 +36,10 @@ INSTALLED_APPS = [
     'tastypie',
     'smart_selects',
     'django_extensions',
-    'crispy_forms',
+    #'crispy_forms',
     'django_filters',
     'bfrs',
+    'django_mvc'
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -163,10 +164,7 @@ DFES_CLOSE_BUSHFIRE_NOTIFICATION_EMAIL=env('DFES_CLOSE_BUSHFIRE_NOTIFICATION_EMA
 AUTHORISE_MESSAGE = env("AUTHORISE_MESSAGE",None)
 
 # Database configuration
-DATABASES = {
-    # Defined in the DATABASE_URL env variable.
-    'default': dj_database_url.config(),
-}
+DATABASES = {'default': database.config()}
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
@@ -183,6 +181,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
+
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder'
+)
 
 
 # Logging settings - log to stdout/stderr

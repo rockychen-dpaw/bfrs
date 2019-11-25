@@ -1,6 +1,6 @@
 import json
 from django import template
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from bfrs.models import Bushfire, Region, District, current_finyear
 from django.contrib.gis.geos import Point, GEOSGeometry
 from django.conf import settings
@@ -9,7 +9,7 @@ import LatLon
 
 register = template.Library()
 
-@register.assignment_tag(takes_context=True)
+@register.tag()
 def is_init_authorised(context, bushfire_id):
     """
     Usage::

@@ -3,7 +3,9 @@ import tempfile
 import subprocess
 import shutil
 import re
+import os
 import traceback
+import logging
 
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
@@ -18,7 +20,7 @@ from bfrs.models import (Bushfire, BushfireSnapshot, District, Region,BushfirePr
 from django.db import IntegrityError, transaction
 from django.http import HttpResponse
 from django.core.mail import send_mail
-from cStringIO import StringIO
+from io import StringIO
 from django.core.mail import EmailMessage
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
@@ -36,15 +38,13 @@ from itertools import count
 from django.forms.models import inlineformset_factory
 from collections import defaultdict, OrderedDict
 from copy import deepcopy
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db.models import Q
 import requests
 from requests.auth import HTTPBasicAuth
 from dateutil import tz
-from dfes import P1CAD
-import os
 
-import logging
+from .dfes import P1CAD
 logger = logging.getLogger(__name__)
 
 def breadcrumbs_li(links):
@@ -1500,7 +1500,7 @@ def export_final_csv(request, queryset):
     ]
 	)
     for obj in queryset:
-		writer.writerow([
+        writer.writerow([
 			smart_str( obj.id),
 			smart_str( obj.region.name),
 			smart_str( obj.district.name),
