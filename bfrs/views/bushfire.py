@@ -11,20 +11,22 @@ class BushfireListView(views.ListView):
     #filter_class = PrescriptionFilter
     model = Bushfire
     paginate_by=50
-    default_order = ("modified","name","id")
+    default_order = ("modified","name","fire_number")
     order_mapping = {
-        "modified":("modified","name","id"),
-        "-modified":("-modified","name","id"),
-        "name":("name","id"),
-        "-name":("-name","id"),
-        "region":("region","district","burn_id"),
-        "-region":("-region","district","burn_id"),
-        "district":("district","burn_id"),
-        "-district":("-district","burn_id"),
-        "year":("financial_year","burn_id"),
-        "-year":("-financial_year","burn_id"),
-        "modified":("modified","burn_id"),
-        "-modified":("-modified","burn_id"),
+        "modified":("modified","name","fire_number"),
+        "-modified":("-modified","-name","-fire_number"),
+        "name":("name","fire_number"),
+        "-name":("-name","-fire_number"),
+        "notifications":("report_status","modified","name","fire_number"),
+        "-notifications":("-report_status","-modified","-name","-fire_number"),
+        "report":("report_status","modified","name","fire_number"),
+        "-report":("-report_status","-modified","-name","-fire_number"),
+        "region":("region","district","fire_number"),
+        "-region":("-region","-district","-fire_number"),
+        "district":("district","fire_number"),
+        "-district":("-district","-fire_number"),
+        "year":("financial_year","fire_number"),
+        "-year":("-financial_year","-fire_number"),
     }
 
     @classmethod

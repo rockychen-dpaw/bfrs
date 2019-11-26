@@ -616,6 +616,7 @@ class BushfireBase(Audit,DictMixin):
             return self.initial_control.name
 
 
+
 class BushfireSnapshot(BushfireBase):
 
     fire_number = models.CharField(max_length=15, verbose_name="Fire Number")
@@ -709,6 +710,15 @@ class Bushfire(BushfireBase):
         'damages',
         'injuries',
     ]
+
+    @property
+    def linked_bushfires(self):
+        if self.valid_bushfire:
+            return [self.valid_bushfire]
+        elif self.report_status <= Bushfire.STATUS_REVIEWED:
+            return self.bushfire_invalidated.all()
+        else:
+            return None
 
     class Meta:
         permissions = (
