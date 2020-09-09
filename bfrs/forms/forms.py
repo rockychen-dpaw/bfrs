@@ -1212,7 +1212,7 @@ class DocumentViewForm(baseforms.ModelForm):
         }
 
 
-class DocumentUpdateForm(DocumentViewForm):
+class DocumentEditForm(DocumentViewForm):
     def clean_custom_tag(self):
         if DocumentTag.check_other_tag(self.cleaned_data["tag"]):
             value = self.cleaned_data.get("custom_tag")
@@ -1235,7 +1235,7 @@ class DocumentUpdateForm(DocumentViewForm):
             'document_created':basewidgets.DatetimeInput(),
         }
 
-class DocumentCreateForm(DocumentUpdateForm):
+class DocumentCreateForm(DocumentEditForm):
 
     def __init__(self,*args,**kwargs):
         if "initial" in kwargs:
@@ -1332,7 +1332,7 @@ class DocumentTagViewForm(baseforms.ModelForm):
             "archivedon":basewidgets.DatetimeDisplay(),
         }
 
-class DocumentTagUpdateForm(DocumentTagViewForm):
+class DocumentTagEditForm(DocumentTagViewForm):
     def clean_name(self):
         value = self.cleaned_data.get("name")
         if self.instance and self.instance.pk:
@@ -1400,7 +1400,7 @@ class BaseDocumentTagFormSet(BaseInlineFormSet):
     def is_valid(self):
         return super(BaseDocumentTagFormSet, self).is_valid()
 
-DocumentTagFormSet = inlineformset_factory(DocumentCategory, DocumentTag, formset=BaseDocumentTagFormSet,form=DocumentTagUpdateForm, extra=1, min_num=0, validate_min=False, exclude=(),can_delete=False)
+DocumentTagFormSet = inlineformset_factory(DocumentCategory, DocumentTag, formset=BaseDocumentTagFormSet,form=DocumentTagEditForm, extra=1, min_num=0, validate_min=False, exclude=(),can_delete=False)
 DocumentTagViewFormSet = inlineformset_factory(DocumentCategory, DocumentTag, formset=BaseDocumentTagFormSet,form=DocumentTagViewForm, extra=0, min_num=0, validate_min=False, exclude=(),can_delete=False)
 
 
@@ -1445,9 +1445,9 @@ class DocumentCategoryViewForm(DocumentCategoryBaseForm):
             "archivedon":basewidgets.DatetimeDisplay(),
         }
 
-class DocumentCategoryUpdateForm(DocumentCategoryBaseForm):
+class DocumentCategoryEditForm(DocumentCategoryBaseForm):
     def __init__(self,*args,**kwargs):
-        super(DocumentCategoryUpdateForm,self).__init__(*args,**kwargs)
+        super(DocumentCategoryEditForm,self).__init__(*args,**kwargs)
         tagformset_cls = DocumentTagFormSet if self.instance and self.instance.pk and not self.instance.archived else DocumentTagViewFormSet
         if self.request and self.request.method == "POST":
             self.documenttag_formset = tagformset_cls(data=self.request.POST, prefix='tag_fs')
@@ -1484,7 +1484,7 @@ class DocumentCategoryUpdateForm(DocumentCategoryBaseForm):
             
 
     def is_valid(self):
-        is_valid = super(DocumentCategoryUpdateForm,self).is_valid()
+        is_valid = super(DocumentCategoryEditForm,self).is_valid()
         if isinstance(self.documenttag_formset,DocumentTagFormSet):
             is_valid = self.documenttag_formset.is_valid() and is_valid
 
@@ -1508,7 +1508,7 @@ class DocumentCategoryUpdateForm(DocumentCategoryBaseForm):
         }
 
 
-class DocumentCategoryCreateForm(DocumentCategoryUpdateForm):
+class DocumentCategoryCreateForm(DocumentCategoryEditForm):
     class Meta:
         model = DocumentCategory
         fields = ('name',)
@@ -1520,7 +1520,7 @@ class DocumentCategoryCreateForm(DocumentCategoryUpdateForm):
         }
 
 
-class DocumentCategoryCreateForm(DocumentCategoryUpdateForm):
+class DocumentCategoryCreateForm(DocumentCategoryEditForm):
     pass
 
 

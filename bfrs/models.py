@@ -769,13 +769,19 @@ class Bushfire(BushfireBase):
 
     @property
     def initial_snapshot(self):
+        if not self.is_init_authorised:
+            return None
+
         qs = self.snapshots.filter(snapshot_type=SNAPSHOT_INITIAL)
-        return qs.latest('created') if len(qs)>0 and self.is_init_authorised else None
+        return qs.latest('created') if len(qs)>0 else None
 
     @property
     def final_snapshot(self):
+        if not self.is_final_authorised:
+            return None
+
         qs = self.snapshots.filter(snapshot_type=SNAPSHOT_FINAL)
-        return qs.latest('created') if len(qs)>0 and self.is_final_authorised else None
+        return qs.latest('created') if len(qs)>0 else None
 
     @property
     def snapshot_list(self):

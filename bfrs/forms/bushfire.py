@@ -1,9 +1,10 @@
 from django.urls import reverse
 from django.contrib.auth.models import User, Group
+from django.utils.html import mark_safe
 
 from django_mvc import forms
 
-from ..models import (Bushfire,)
+from ..models import (Bushfire,BushfireSnapshot)
 
 class BushfireCleanMixin(object):
     pass
@@ -11,52 +12,54 @@ class BushfireCleanMixin(object):
 
 def notification_url(value,form,instance):
     if value == Bushfire.STATUS_INITIAL:
-        return reverse("bfrs:bushfire_list")
+        return reverse("bfrs:initial_bushfire_update",kwargs={"pk":instance.id})
     elif value > Bushfire.STATUS_REVIEWED:
-        return reverse("bfrs:bushfire_list")
+        return reverse("bfrs:invalid_bushfire_update",kwargs={"pk":instance.id})
     else:
-        return reverse("bfrs:bushfire_list")
+        return reverse("bfrs:initial_bushfire_snapshot",kwargs={"pk":instance.id})
 
 def report_url(value,form,instance):
     if value == Bushfire.STATUS_INITIAL:
-        return reverse("bfrs:bushfire_list")
+        return ""
+    elif value == Bushfire.STATUS_INITIAL_AUTHORISED:
+        return reverse("bfrs:submitted_bushfire_update",kwargs={"pk":instance.id})
     elif value > Bushfire.STATUS_REVIEWED:
-        return reverse("bfrs:bushfire_list")
+        return ""
     else:
-        return reverse("bfrs:bushfire_list")
+        return reverse("bfrs:final_bushfire_snapshot",kwargs={"pk":instance.id})
 
 def notification_template(value):
     if value == Bushfire.STATUS_INITIAL:
         return """
-            <a href="{url}" title="Edit the initial fire report" style="color:red"><span style="display:none">100</span><i class="icon-edit icon-white"></i></a>
+            <a href="{url}" onclick="event.stopPropagation();" title="Edit the initial fire report" style="color:red"><span style="display:none">100</span><i class="icon-edit icon-white"></i></a>
         """
     elif value == Bushfire.STATUS_INITIAL_AUTHORISED:
         return """
-            <a href="{url}" title="View the submitted fire report" style="color:green"><span style="display:none">100</span><i class="icon-ok icon-white"></i></a>
+            <a href="{url}" onclick="event.stopPropagation();" title="View the submitted fire report" style="color:green"><span style="display:none">100</span><i class="icon-ok icon-white"></i></a>
         """
     elif value == Bushfire.STATUS_FINAL_AUTHORISED:
         return """
-            <a href="{url}" title="View the authorised fire report" style="color:green"><span style="display:none">100</span><i class="icon-ok icon-white"></i></a>
+            <a href="{url}" onclick="event.stopPropagation();" title="View the authorised fire report" style="color:green"><span style="display:none">100</span><i class="icon-ok icon-white"></i></a>
         """
     elif value == Bushfire.STATUS_REVIEWED:
         return """
-            <a href="{url}" title="View the reviewed fire report" style="color:green"><span style="display:none">100</span><i class="icon-ok icon-white"></i></a>
+            <a href="{url}" onclick="event.stopPropagation();" title="View the reviewed fire report" style="color:green"><span style="display:none">100</span><i class="icon-ok icon-white"></i></a>
         """
     elif value == Bushfire.STATUS_MERGED:
         return """
-            <a href="{url}" title="View the merged fire report"><span style="display:none">100</span><i class="icon-ban-circle icon-white"></i></a>
+            <a href="{url}" onclick="event.stopPropagation();" title="Edit the merged fire report"><span style="display:none">100</span><i class="icon-ban-circle icon-white"></i></a>
         """
     elif value == Bushfire.STATUS_DUPLICATED:
         return """
-            <a href="{url}" title="View the duplicated fire report"><span style="display:none">101</span><i class="icon-ban-circle icon-white"></i></a>
+            <a href="{url}" onclick="event.stopPropagation();" title="Edit the duplicated fire report"><span style="display:none">101</span><i class="icon-ban-circle icon-white"></i></a>
         """
     elif value == Bushfire.STATUS_INVALIDATED:
         return """
-            <a href="{url}" title="View the invalidated fire report"><span style="display:none">5</span><i class="icon-ban-circle icon-white"></i></a>
+            <a href="{url}" onclick="event.stopPropagation();" title="Edit the invalidated fire report"><span style="display:none">5</span><i class="icon-ban-circle icon-white"></i></a>
         """
     else:
         return """
-            <a href="{url}" title="View the invalidated fire report"><span style="display:none">6</span><i class="icon-ban-circle icon-white"></i></a>
+            <a href="{url}" onclick="event.stopPropagation();" title="Edit the invalidated fire report"><span style="display:none">6</span><i class="icon-ban-circle icon-white"></i></a>
         """
 
 def report_template(value):
@@ -64,15 +67,15 @@ def report_template(value):
         return ""
     elif value == Bushfire.STATUS_INITIAL_AUTHORISED:
         return """
-            <a href="{url}" title="Edit the submitted fire report" style="color:red"><span style="display:none">100</span><i class="icon-edit icon-white"></i></a>
+            <a href="{url}" onclick="event.stopPropagation();" title="Edit the submitted fire report" style="color:red"><span style="display:none">100</span><i class="icon-edit icon-white"></i></a>
         """
     elif value == Bushfire.STATUS_FINAL_AUTHORISED:
         return """
-            <a href="{url}" title="View the authorised fire report" style="color:green"><span style="display:none">100</span><i class="icon-ok icon-white"></i></a>
+            <a href="{url}" onclick="event.stopPropagation();" title="View the authorised fire report" style="color:green"><span style="display:none">100</span><i class="icon-ok icon-white"></i></a>
         """
     elif value == Bushfire.STATUS_REVIEWED:
         return """
-            <a href="{url}" title="View the reviewed fire report" style="color:green"><span style="display:none">100</span><i class="icon-ok icon-white"></i></a>
+            <a href="{url}" onclick="event.stopPropagation();" title="View the reviewed fire report" style="color:green"><span style="display:none">100</span><i class="icon-ok icon-white"></i></a>
         """
     else:
         return ""
@@ -127,6 +130,44 @@ class BushfireConfigMixin(object):
 class BushfireBaseForm(BushfireCleanMixin,BushfireConfigMixin,forms.ModelForm):
     class Meta:
         model = Bushfire
+        purpose = ('edit','view')
+
+class BushfireSnapshotForm(BushfireBaseForm):
+    class Meta:
+        purpose = (None,'view')
+        model = BushfireSnapshot
+        all_fields = ('fire_number','dfes_incident_no','name','job_code',"report_status","district","creator","created","field_officer","duty_officer","other_field_officer","other_field_officer_agency","other_field_officer_phone","linked_bushfires")
+        ordered_fields = ('fire_number','dfes_incident_no','name','job_code')
+
+class InitialBushfireEditForm(BushfireBaseForm):
+    class Meta:
+        all_fields = ('fire_number','dfes_incident_no','name','job_code',"report_status","district","creator","created","field_officer","duty_officer","other_field_officer","other_field_officer_agency","other_field_officer_phone","linked_bushfires")
+        ordered_fields = (
+                (mark_safe('BUSHFIRE NOTIFICATION <span style="color:red;padding-left:20px">(submit within 30 mins of detection)</span>'),False,False,(
+                    ('fire_number','dfes_incident_no'),
+                    ('name','job_code')
+                )),
+        )
+        editable_fields = ('name','job_code')
+
+class SubmittedBushfireEditForm(BushfireBaseForm):
+    class Meta:
+        all_fields = ('fire_number','dfes_incident_no','name','job_code',"report_status","district","creator","created","field_officer","duty_officer","other_field_officer","other_field_officer_agency","other_field_officer_phone","linked_bushfires")
+        ordered_fields = ('fire_number','dfes_incident_no','name','job_code')
+        editable_fields = ('name','job_code')
+
+class AuthorisedBushfireEditForm(BushfireBaseForm):
+    class Meta:
+        all_fields = ('fire_number','dfes_incident_no','name','job_code',"report_status","district","creator","created","field_officer","duty_officer","other_field_officer","other_field_officer_agency","other_field_officer_phone","linked_bushfires")
+        ordered_fields = ('fire_number','dfes_incident_no','name','job_code')
+        editable_fields = ('name','job_code')
+
+class InvalidBushfireEditForm(BushfireBaseForm):
+    class Meta:
+        all_fields = ('fire_number','dfes_incident_no','name','job_code',"report_status","district","creator","created","field_officer","duty_officer","other_field_officer","other_field_officer_agency","other_field_officer_phone","linked_bushfires")
+        ordered_fields = ('fire_number','dfes_incident_no','name','job_code')
+        editable_fields = ('name','job_code')
+
 
 
 class BushfireBaseListForm(BushfireConfigMixin,forms.ListForm):
